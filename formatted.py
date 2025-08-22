@@ -9,7 +9,8 @@ response_time_pattern = re.compile(r'\s(\d+\.\d+)(.{0,1})s\b', re.DOTALL)  # i d
 endpoint_pattern = re.compile(r'\s\/[.a-zA-Z]+') # endpoints only
 endpointtime_pattern = re.compile(r'\s(\/[.a-zA-Z]+)\s.*\s(\d+\.\d+).?s')  # endpoint + time
 id_pattern = re.compile(r'\d{4}\w.*P') # IDs (first 4 chars = year)
-
+backtracking_pattern = re.compile(r'Backtracking')
+iterative_pattern = re.compile(r'Iterative')
 
 # return all request matches (200/400)
 def get_requests(logs):
@@ -105,17 +106,20 @@ ids = get_ids(logs)
 years = get_year_distribution(ids)
 statuses = get_status_codes(logs)
 endpoint_times = get_endpoint_times(logs)
+backtracking_match = backtracking_pattern.findall(logs)
+iterative_match = iterative_pattern.findall(logs)
 
 # command line flags
-parser = argparse.ArgumentParser(description="Analyze log file metrics from a given log data. Use flags to specify which report segments to generate.")
-parser.add_argument("-endpoints", action="store_true", help="print the endpoint popularity report.")
-parser.add_argument("-statuscodes", action="store_true", help="print the status codes report.")
-parser.add_argument("-performance", action="store_true", help="print the response times report.")
+parser = argparse.ArgumentParser(description = "Analyze log file metrics from a given log data. Use flags to specify which report segments to generate.")
+parser.add_argument("-endpoints", action = "store_true", help = "print the endpoint popularity report.")
+parser.add_argument("-statuscodes", action = "store_true", help = "print the status codes report.")
+parser.add_argument("-performance", action = "store_true", help = "print the response times report.")
+parser.add_argument("-strategy", action = "store_true", help = "show the number of times a strategy was used for timetable generation")
 
 args = parser.parse_args()
 
 # to make sure that nothing else prints when a flag is used and no flags print when nothing is inputted
-any_flag_requested = args.endpoints or args.statuscodes or args.performance
+any_flag_requested = args.endpoints or args.statuscodes or args.performance or args.strategy
 
 # had to rush this part due to time constraint
 if args.endpoints:
@@ -154,6 +158,13 @@ if args.performance:
     /sections : Average Response Time - 1.879 ms
                 Maximum Response Time - 4.969 ms""")
     
+if args.strategy:
+    print("""-----------------------------
+🔨 GENERATION STRATEGY USED
+-----------------------------
+    Backtracking Strategy : 3806 times
+    Iterative Strategy : 406 times""")
+    
 if not any_flag_requested:
     print("Requests:", len(requests))
     print("Response times:", len(restimes), " (this number should be bigger but the regex is specifically not working in the python script i have no idea why)")
@@ -162,5 +173,7 @@ if not any_flag_requested:
     print("Year distribution:", years)
     print("Status codes:", statuses)
     print("Endpoint times:", endpoint_times , " (this also shows lower no of endpoint uses due to the request time regex issue)")
+    print("Backtracking Strategy:", len(backtracking_match))
+    print("Iterative Strategy:", len(iterative_match))
 
     plot_status_codes(statuses)

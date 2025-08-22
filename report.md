@@ -49,3 +49,9 @@
         2023 : 4306
         2024 : 9776
         2025 : 8864
+
+-----------------------------
+🔨 GENERATION STRATEGY USED
+-----------------------------
+    Backtracking Strategy : 3806 times
+    Iterative Strategy : 406 times
